@@ -1,5 +1,5 @@
-import { rm } from 'node:fs/promises'
 import ApiError from "../utils/ApiError"
+import { cleanupWorkspace } from '../utils/cleanupWorkspace'
 
 const compress = async (file) => {
   const uuid = Bun.randomUUIDv7()
@@ -41,8 +41,7 @@ const compress = async (file) => {
       downloadURL: `/api/v1/download/${uuid}/${file.name}.huff`
     }
   } catch (error) {
-    console.error('rm')
-    await rm(`./tmp/${uuid}`, { recursive: true, force: true })
+    cleanupWorkspace(`tmp/${uuid}`)
     throw error
   }
 }
