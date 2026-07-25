@@ -1532,38 +1532,24 @@ Status inspectFile(const char *inHuffPath) {
   size_t nextId = 0;
   char code[256] = {0};
 
-    // printf("{\n"
-    //         "\t\"magic\": \"HUFF2412\",\n"
-    //         "\t\"originalFilename\": \"%s\",\n"
-    //         "\t\"originalSize\": %" PRIu64 ",\n"
-    //         "\t\"serializedTreeBits\": %" PRIu32 ",\n"
-    //         "\t\"headerSize\": %" PRIu64 ",\n"
-    //         "\t\"treeBytes\": %" PRIu64 ",\n"
-    //         "\t\"treePaddingBits\": %" PRIu64 ",\n"
-    //         "\t\"leaves\": %zu,\n"
-    //         "\t\"internal\": %zu,\n"
-    //         "\t\"total\": %zu,\n"
-    //         "\t\"height\": %zu\n"
-    //         "}\n", header.name, header.originalSize, treeBitsCount, headerSize, treeBytes, treePaddingBits, stats.leaves, stats.internalNodes, stats.totalNodes, stats.height);
+  printf("{\n");
 
-printf("{\n");
+  printf("\t\"magic\": \"HUFF2412\",\n");
+  printf("\t\"originalFilename\": \"%s\",\n", header.name);
+  printf("\t\"originalSize\": %" PRIu64 ",\n", header.originalSize);
+  printf("\t\"serializedTreeBits\": %" PRIu32 ",\n", treeBitsCount);
+  printf("\t\"headerSize\": %" PRIu64 ",\n", headerSize);
+  printf("\t\"treeBytes\": %" PRIu64 ",\n", treeBytes);
+  printf("\t\"treePaddingBits\": %" PRIu64 ",\n", treePaddingBits);
+  printf("\t\"leaves\": %zu,\n", stats.leaves);
+  printf("\t\"internal\": %zu,\n", stats.internalNodes);
+  printf("\t\"total\": %zu,\n", stats.totalNodes);
+  printf("\t\"height\": %zu,\n", stats.height);
 
-printf("\t\"magic\": \"HUFF2412\",\n");
-printf("\t\"originalFilename\": \"%s\",\n", header.name);
-printf("\t\"originalSize\": %" PRIu64 ",\n", header.originalSize);
-printf("\t\"serializedTreeBits\": %" PRIu32 ",\n", treeBitsCount);
-printf("\t\"headerSize\": %" PRIu64 ",\n", headerSize);
-printf("\t\"treeBytes\": %" PRIu64 ",\n", treeBytes);
-printf("\t\"treePaddingBits\": %" PRIu64 ",\n", treePaddingBits);
-printf("\t\"leaves\": %zu,\n", stats.leaves);
-printf("\t\"internal\": %zu,\n", stats.internalNodes);
-printf("\t\"total\": %zu,\n", stats.totalNodes);
-printf("\t\"height\": %zu,\n", stats.height);
+  printf("\t\"tree\": ");
+  printTreeJSON(root, &nextId, code, 0);
 
-printf("\t\"tree\": ");
-printTreeJSON(root, &nextId, code, 0);
-
-printf("\n}\n");
+  printf("\n}\n");
 
 cleanup:
   if (in)
