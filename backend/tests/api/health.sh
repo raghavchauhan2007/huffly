@@ -2,7 +2,7 @@
 
 . .env.test
 
-curl -Ss -X POST "${URL}"/health \
+curl -Ss -X GET "${URL}"/health \
      -w "\n%{stderr}HTTP Status Code: %{http_code}\nTotal Time: %{time_total}s\n\n" \
      -o .tmp_response
 

@@ -2,19 +2,18 @@
 
 . .env.test
 
-# -H "Content-Type: application/json" \
-# -d "${DATA}" \
+ID=$(jq -r '.id' api/cache.json)
+FILENAME=$(jq -r '.filename' api/cache.json)
 
-curl -Ss -X POST "${URL}"/compress \
+curl -Ss -X GET "${URL}"/download/"${ID}/"${FILENAME} \
      -w "\n%{stderr}HTTP Status Code: %{http_code}\nTotal Time: %{time_total}s\n\n" \
-     -F "file=@file.txt" \
-     -o .tmp_response
+     -H "Content-Type: application/json" \
+     -O
+     # -o .tmp_response
 
-jq '.' .tmp_response 2>/dev/null || bat .tmp_response
+# jq '.' .tmp_response 2>/dev/null || bat .tmp_response
 
-jq -r '{id: .data.workspaceId, filename: .data.compressedFileName}' .tmp_response > api/cache.json
-
-rm -f .tmp_response
+# rm -f .tmp_response
 
 # HTTP Version: %{http_version}
 # Bytes Downloaded: %{size_download}
