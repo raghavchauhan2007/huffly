@@ -1,4 +1,5 @@
 import { compressFile } from "./controllers/compression.controller"
+import { decompressFile } from "./controllers/decompression.controller"
 import { downloadFile } from "./controllers/download.controller"
 import { health } from "./controllers/health.controller"
 import ApiError from "./utils/ApiError"
@@ -13,6 +14,10 @@ const server = Bun.serve({
 
     '/api/v1/compress': {
       POST: withErrorHandler(compressFile)
+    },
+
+    '/api/v1/decompress': {
+      POST: withErrorHandler(decompressFile)
     },
 
     '/api/v1/download/:id/:filename': {
