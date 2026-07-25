@@ -1,3 +1,4 @@
+import { MAX_FILE_SIZE } from "../constants"
 import { compress } from "../services/compression.service"
 import ApiError from "../utils/ApiError"
 import ApiResponse from "../utils/ApiResponse"
@@ -8,6 +9,10 @@ const compressFile = async (req) => {
 
   if (!(file instanceof File)) {
     throw new ApiError(400, 'Upload a valid file')
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new ApiError(413, `Max upload size is ${ MAX_FILE_SIZE / 1024 / 1024 } MiB`)
   }
 
   const compressionResponse = await compress(file)

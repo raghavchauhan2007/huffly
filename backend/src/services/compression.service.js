@@ -30,6 +30,10 @@ const compress = async (file) => {
       throw new ApiError(500, 'file was not compressed')
     }
 
+    setTimeout(() => {
+      cleanupWorkspace(`./tmp/${uuid}`).catch(console.error)
+    }, 30 * 60 * 1000)
+
     return {
       workspaceId: uuid,
       originalName: file.name,
@@ -41,7 +45,7 @@ const compress = async (file) => {
       downloadURL: `/api/v1/download/${uuid}/${file.name}.huff`
     }
   } catch (error) {
-    cleanupWorkspace(`tmp/${uuid}`)
+    await cleanupWorkspace(`tmp/${uuid}`)
     throw error
   }
 }
