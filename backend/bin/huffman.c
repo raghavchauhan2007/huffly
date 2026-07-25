@@ -97,6 +97,7 @@ ERR_ABORTED.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define BUFFER_SIZE 8192
 #define FREQ_SIZE 256
@@ -218,6 +219,76 @@ void freeTree(Node **root) {
   *root = NULL;
 }
 
+typedef struct {
+  size_t leaves;
+  size_t internalNodes;
+  size_t totalNodes;
+  size_t height;
+} TreeStats;
+
+size_t collectTreeStats(Node *root, TreeStats *stats) {
+  if (!root) {
+    return 0;
+  }
+
+  stats->totalNodes++;
+
+  if (!root->right && !root->left) {
+    stats->leaves++;
+  }
+
+  else {
+    stats->internalNodes++;
+  }
+
+  size_t left = collectTreeStats(root->left, stats);
+  size_t right = collectTreeStats(root->right, stats);
+
+  size_t height = 1 + (left > right ? left : right);
+
+  if (height > stats->height) {
+    stats->height = height;
+  }
+
+  return height;
+}
+
+void printTreeJSON(const Node *root, size_t *nextId, char *code, size_t depth) {
+  if (!root) {
+    printf("null");
+    return;
+  }
+
+  size_t id = (*nextId)++;
+
+  bool isLeaf = root->left == NULL && root->right == NULL;
+
+  printf("{");
+
+  printf("\"id\":%zu,", id);
+
+  if (isLeaf) {
+    code[depth] = '\0';
+
+    printf("\"leaf\":true,");
+    printf("\"value\":%u,", root->byte);
+    printf("\"code\":\"%s\"", code);
+  } else {
+    printf("\"leaf\":false,");
+
+    printf("\"left\":");
+    code[depth] = '0';
+    printTreeJSON(root->left, nextId, code, depth + 1);
+
+    printf(",");
+
+    printf("\"right\":");
+    code[depth] = '1';
+    printTreeJSON(root->right, nextId, code, depth + 1);
+  }
+
+  printf("}");
+}
 /*============================== HEAP ===============================*/
 
 typedef struct {
@@ -1086,8 +1157,7 @@ cleanup:
  * to terminate in case of an error or successful run
  * */
 
-void cleanupAll(uint64_t *freq, MinHeap *h, Node *root, Code *table,
-                char *outName) {
+void cleanupAll(uint64_t *freq, MinHeap *h, Node *root, Code *table, char *outName) {
   free(freq);
 
   if (root) {
@@ -1171,10 +1241,10 @@ void printStatus(Status s) {
  * Helper function to generate the output name for the encoded file
  * */
 
-Status makeOutputName(char **outName, const char *inputPath) {
+Status makeOutputName(char **outName, const char *outputPath) {
   *outName = NULL;
 
-  const char *base = baseName(inputPath);
+  const char *base = outputPath;
   const char *ext = ".huff";
 
   size_t baseLen = strlen(base);
@@ -1200,26 +1270,39 @@ Status makeOutputName(char **outName, const char *inputPath) {
 
 typedef enum { NONE, COMPRESS, DECOMPRESS, INSPECT } Mode;
 
-Status parseArgs(int argc, char **argv, Mode *mode, const char **inputPath) {
+Status parseArgs(int argc, char **argv, Mode *mode, const char **inputPath, const char **outputPath) {
   *mode = NONE;
   *inputPath = NULL;
+  *outputPath = NULL;
 
-  if (argc != 3)
+  if (argc < 3) {
     return ERR_FILE;
+  }
 
   if (strcmp(argv[1], "-c") == 0) {
+    if (argc != 4)
+      return ERR_FILE;
+
     *mode = COMPRESS;
     *inputPath = argv[2];
+    *outputPath = argv[3];
     return SUCCESS;
   }
 
   else if (strcmp(argv[1], "-x") == 0) {
+    if (argc != 4)
+      return ERR_FILE;
+
     *mode = DECOMPRESS;
     *inputPath = argv[2];
+    *outputPath = argv[3];
     return SUCCESS;
   }
 
   else if (strcmp(argv[1], "-i") == 0) {
+    if (argc != 3)
+      return ERR_FILE;
+
     *mode = INSPECT;
     *inputPath = argv[2];
     return SUCCESS;
@@ -1270,7 +1353,7 @@ int promptOverwrite(const char *path) {
  * The file is then encoded by the encoder pipeline
  * */
 
-Status compressFile(const char *inputPath) {
+Status compressFile(const char *inputPath, const char *outputPath) {
   Status s = SUCCESS;
 
   uint64_t *freq = NULL;
@@ -1305,7 +1388,7 @@ Status compressFile(const char *inputPath) {
   if (s != SUCCESS)
     goto cleanup;
 
-  s = makeOutputName(&outName, inputPath);
+  s = makeOutputName(&outName, outputPath);
   if (s != SUCCESS)
     goto cleanup;
 
@@ -1327,7 +1410,7 @@ cleanup:
  * original file
  * */
 
-Status decodeFile(const char *inHuffPath) {
+Status decodeFile(const char *inHuffPath, const char *outputPath) {
   Status s = SUCCESS;
   FILE *in = NULL;
   FILE *out = NULL;
@@ -1352,14 +1435,14 @@ Status decodeFile(const char *inHuffPath) {
     goto cleanup;
   }
 
-  if (fileExists(header.name)) {
-    if (!promptOverwrite(header.name)) {
-      s = ERR_ABORTED;
-      goto cleanup;
-    }
-  }
+  // if (fileExists(header.name)) {
+  //   if (!promptOverwrite(header.name)) {
+  //     s = ERR_ABORTED;
+  //     goto cleanup;
+  //   }
+  // }
 
-  out = fopen(header.name, "wb");
+  out = fopen(outputPath, "wb");
   if (!out) {
     s = ERR_FILE;
     goto cleanup;
@@ -1384,8 +1467,8 @@ Status decodeFile(const char *inHuffPath) {
   if (s != SUCCESS)
     goto cleanup;
 
-  printf("Original File Size: %" PRIu64 " Bytes\n", header.originalSize);
-  printf("Wrote Decoded File: %s\n", header.name);
+  // printf("Original File Size: %" PRIu64 " Bytes\n", header.originalSize);
+  // printf("Wrote Decoded File: %s\n", header.name);
 
 cleanup:
   if (out)
@@ -1404,6 +1487,8 @@ Status inspectFile(const char *inHuffPath) {
   HuffHeader header;
   memset(&header, 0, sizeof(header));
 
+  Node *root = NULL;
+
   in = fopen(inHuffPath, "rb");
   if (!in) {
     s = ERR_FILE;
@@ -1414,16 +1499,76 @@ Status inspectFile(const char *inHuffPath) {
   if (s != SUCCESS)
     goto cleanup;
 
-  printf("{\n"
-          "\t\"magic\": \"HUFF2412\",\n"
-          "\t\"originalFilename\": \"%s\",\n"
-          "\t\"originalSize\": %" PRIu64 ",\n"
-          "\t\"serializedTreeBits\": %" PRIu32 "\n"
-          "}\n", header.name, header.originalSize, header.treeBitsLen);
+  if (header.treeBitsLen == 0) {
+    s = ERR_FORMAT;
+    goto cleanup;
+  }
+
+  BitReader br;
+  initBitReader(&br, in);
+
+  uint32_t bitsLeft = header.treeBitsLen;
+  s = readTree(&br, &bitsLeft, &root);
+  if (s != SUCCESS)
+    goto cleanup;
+
+  if (bitsLeft != 0) {
+    s = ERR_FORMAT;
+    goto cleanup;
+  }
+
+  alignToByte(&br);
+
+  uint32_t treeBitsCount = header.treeBitsLen;
+  uint64_t treeBytes = (treeBitsCount + 7) / 8;
+  uint64_t treePaddingBits = treeBytes * 8 - treeBitsCount;
+
+  uint64_t headerSize = 8 + 8 + 2 + header.nameLen + 4 + treeBytes;
+
+  TreeStats stats = {0};
+
+  size_t treeHeight = collectTreeStats(root, &stats);
+
+  size_t nextId = 0;
+  char code[256] = {0};
+
+    // printf("{\n"
+    //         "\t\"magic\": \"HUFF2412\",\n"
+    //         "\t\"originalFilename\": \"%s\",\n"
+    //         "\t\"originalSize\": %" PRIu64 ",\n"
+    //         "\t\"serializedTreeBits\": %" PRIu32 ",\n"
+    //         "\t\"headerSize\": %" PRIu64 ",\n"
+    //         "\t\"treeBytes\": %" PRIu64 ",\n"
+    //         "\t\"treePaddingBits\": %" PRIu64 ",\n"
+    //         "\t\"leaves\": %zu,\n"
+    //         "\t\"internal\": %zu,\n"
+    //         "\t\"total\": %zu,\n"
+    //         "\t\"height\": %zu\n"
+    //         "}\n", header.name, header.originalSize, treeBitsCount, headerSize, treeBytes, treePaddingBits, stats.leaves, stats.internalNodes, stats.totalNodes, stats.height);
+
+printf("{\n");
+
+printf("\t\"magic\": \"HUFF2412\",\n");
+printf("\t\"originalFilename\": \"%s\",\n", header.name);
+printf("\t\"originalSize\": %" PRIu64 ",\n", header.originalSize);
+printf("\t\"serializedTreeBits\": %" PRIu32 ",\n", treeBitsCount);
+printf("\t\"headerSize\": %" PRIu64 ",\n", headerSize);
+printf("\t\"treeBytes\": %" PRIu64 ",\n", treeBytes);
+printf("\t\"treePaddingBits\": %" PRIu64 ",\n", treePaddingBits);
+printf("\t\"leaves\": %zu,\n", stats.leaves);
+printf("\t\"internal\": %zu,\n", stats.internalNodes);
+printf("\t\"total\": %zu,\n", stats.totalNodes);
+printf("\t\"height\": %zu,\n", stats.height);
+
+printf("\t\"tree\": ");
+printTreeJSON(root, &nextId, code, 0);
+
+printf("\n}\n");
 
 cleanup:
   if (in)
     fclose(in);
+  freeTree(&root);
   freeHeader(&header);
   return s;
 }
@@ -1433,21 +1578,22 @@ cleanup:
 int main(int argc, char **argv) {
   Mode mode;
   const char *inputPath = NULL;
+  const char *outputPath = NULL;
   Status s;
 
-  s = parseArgs(argc, argv, &mode, &inputPath);
+  s = parseArgs(argc, argv, &mode, &inputPath, &outputPath);
   if (s != SUCCESS || mode == NONE) {
     fprintf(stderr, "Usage:\n");
-    fprintf(stderr, "  %s -c <input_file>    (compress)\n", argv[0]);
-    fprintf(stderr, "  %s -x <input_file>    (decompress)\n", argv[0]);
-    fprintf(stderr, "  %s -i <input_file>    (inspect)\n", argv[0]);
+    fprintf(stderr, "  %s -c <input_path> <output_path>    (compress)\n", argv[0]);
+    fprintf(stderr, "  %s -x <input_path> <output_path>    (decompress)\n", argv[0]);
+    fprintf(stderr, "  %s -i <input_file>                  (inspect)\n", argv[0]);
     return 1;
   }
 
   if (mode == COMPRESS)
-    s = compressFile(inputPath);
+    s = compressFile(inputPath, outputPath);
   else if (mode == DECOMPRESS)
-    s = decodeFile(inputPath);
+    s = decodeFile(inputPath, outputPath);
   else
     s = inspectFile(inputPath);
 
