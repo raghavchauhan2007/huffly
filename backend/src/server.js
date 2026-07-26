@@ -2,6 +2,7 @@ import { compressFile } from "./controllers/compression.controller"
 import { decompressFile } from "./controllers/decompression.controller"
 import { downloadFile } from "./controllers/download.controller"
 import { health } from "./controllers/health.controller"
+import { inspectFile } from "./controllers/inspect.controller"
 import ApiError from "./utils/ApiError"
 import { handleError } from "./utils/handleError"
 import { withErrorHandler } from "./utils/withErrorHandler"
@@ -22,6 +23,10 @@ const server = Bun.serve({
 
     '/api/v1/download/:id/:filename': {
       GET: withErrorHandler(downloadFile)
+    },
+
+    '/api/v1/inspect': {
+      POST: withErrorHandler(inspectFile)
     }
   },
 
