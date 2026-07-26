@@ -1491,6 +1491,8 @@ Status decodeFile(const char *inHuffPath, const char *outputDirectory) {
   // printf("Original File Size: %" PRIu64 " Bytes\n", header.originalSize);
   // printf("Wrote Decoded File: %s\n", header.name);
 
+  printf("{\"outputPath\":\"%s\"}\n", outputPath);
+
 cleanup:
   if (out)
     fclose(out);
