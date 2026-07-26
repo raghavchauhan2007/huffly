@@ -1,3 +1,4 @@
+import { TTL } from "../constants"
 import ApiError from "../utils/ApiError"
 import { cleanupWorkspace } from '../utils/cleanupWorkspace'
 
@@ -32,7 +33,7 @@ const compress = async (file) => {
 
     setTimeout(() => {
       cleanupWorkspace(`./tmp/${workspaceId}`).catch(console.error)
-    }, 30 * 60 * 1000)
+    }, TTL)
 
     return {
       workspaceId: workspaceId,
