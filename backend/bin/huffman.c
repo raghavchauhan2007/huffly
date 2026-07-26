@@ -1396,8 +1396,13 @@ Status compressFile(const char *inputPath, const char *outputPath) {
   if (s != SUCCESS)
     goto cleanup;
 
-  printf("Original File Size: %" PRIu64 " Bytes\n", totalBytes);
-  printf("Wrote Compressed File: %s\n", outName);
+  // printf("Original File Size: %" PRIu64 " Bytes\n", totalBytes);
+  // printf("Wrote Compressed File: %s\n", outName);
+
+  printf("{\n");
+  printf("  \"outputPath\": \"%s\",\n", outName);
+  printf("  \"originalSize\": %" PRIu64 "\n", totalBytes);
+  printf("}\n");
 
 cleanup:
   cleanupAll(freq, heap, root, table, outName);
@@ -1491,7 +1496,11 @@ Status decodeFile(const char *inHuffPath, const char *outputDirectory) {
   // printf("Original File Size: %" PRIu64 " Bytes\n", header.originalSize);
   // printf("Wrote Decoded File: %s\n", header.name);
 
-  printf("{\"outputPath\":\"%s\"}\n", outputPath);
+  printf("{\n");
+  printf("  \"outputPath\": \"%s\",\n", outputPath);
+  printf("  \"originalFilename\": \"%s\",\n", header.name);
+  printf("  \"originalSize\": %" PRIu64 "\n", header.originalSize);
+  printf("}\n");
 
 cleanup:
   if (out)
