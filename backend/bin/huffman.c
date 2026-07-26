@@ -1410,7 +1410,7 @@ cleanup:
  * original file
  * */
 
-Status decodeFile(const char *inHuffPath, const char *outputPath) {
+Status decodeFile(const char *inHuffPath, const char *outputDirectory) {
   Status s = SUCCESS;
   FILE *in = NULL;
   FILE *out = NULL;
@@ -1441,6 +1441,27 @@ Status decodeFile(const char *inHuffPath, const char *outputPath) {
   //     goto cleanup;
   //   }
   // }
+
+  size_t dirLen = strlen(outputDirectory);
+  const char *separator = (dirLen > 0 && outputDirectory[dirLen - 1] == '/') ? "" : "/";
+
+  int len = snprintf(NULL, 0, "%s%s%s", outputDirectory, separator, header.name);
+  if (len < 0) {
+    s = ERR_FILE;
+    goto cleanup;
+  }
+
+  char *outputPath = malloc(len + 1);
+
+  if (!outputPath) {
+    s = ERR_MEMORY;
+    goto cleanup;
+  }
+
+  if (snprintf(outputPath, len + 1, "%s%s%s", outputDirectory, separator, header.name) < 0) {
+    s = ERR_FILE;
+    goto cleanup;
+  }
 
   out = fopen(outputPath, "wb");
   if (!out) {
@@ -1475,6 +1496,8 @@ cleanup:
     fclose(out);
   if (in)
     fclose(in);
+  if (outputPath)
+    free(outputPath);
   freeTree(&root);
   freeHeader(&header);
   return s;
