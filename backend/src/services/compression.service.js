@@ -2,10 +2,10 @@ import ApiError from "../utils/ApiError"
 import { cleanupWorkspace } from '../utils/cleanupWorkspace'
 
 const compress = async (file) => {
-  const uuid = Bun.randomUUIDv7()
+  const workspaceId = Bun.randomUUIDv7()
 
   try {
-    const inputPath = `./tmp/${uuid}/${file.name}`
+    const inputPath = `./tmp/${workspaceId}/${file.name}`
 
     await Bun.write(inputPath, file)
 
@@ -31,21 +31,21 @@ const compress = async (file) => {
     }
 
     setTimeout(() => {
-      cleanupWorkspace(`./tmp/${uuid}`).catch(console.error)
+      cleanupWorkspace(`./tmp/${workspaceId}`).catch(console.error)
     }, 30 * 60 * 1000)
 
     return {
-      workspaceId: uuid,
+      workspaceId: workspaceId,
       originalName: file.name,
       originalSize: file.size,
       compressedFileName: `${file.name}.huff`,
       compressedSize: compressedFile.size,
       compressionRatio: (1 - (compressedFile.size / file.size)),
       outputPath: outputPath,
-      downloadURL: `/api/v1/download/${uuid}/${file.name}.huff`
+      downloadURL: `/api/v1/download/${workspaceId}/${file.name}.huff`
     }
   } catch (error) {
-    await cleanupWorkspace(`tmp/${uuid}`)
+    await cleanupWorkspace(`tmp/${workspaceId}`)
     throw error
   }
 }
