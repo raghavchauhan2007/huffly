@@ -11,3 +11,6 @@ decompress:
 
 download:
 	@api/download.sh
+
+inspect:
+	@api/inspect.sh
