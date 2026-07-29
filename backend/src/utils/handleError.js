@@ -1,3 +1,4 @@
+import { CORS_HEADERS } from "../constants";
 import ApiError from "./ApiError"
 
 const handleError = (error) => {
@@ -10,7 +11,8 @@ const handleError = (error) => {
         success: error.success
       },
       {
-        status: error.statusCode
+        status: error.statusCode,
+        headers: CORS_HEADERS
       }
     )
   }
@@ -25,7 +27,8 @@ const handleError = (error) => {
       success: false
     },
     {
-      status: 500
+      status: 500,
+      headers: CORS_HEADERS
     }
   )
 }

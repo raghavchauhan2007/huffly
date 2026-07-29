@@ -22,7 +22,10 @@ const inspectFile = async (req) => {
       200,
       inspectionResponse,
       'inspection done'
-    )
+    ),
+    {
+      headers: CORS_HEADERS
+    }
   )
 }
 

@@ -22,7 +22,10 @@ const decompressFile = async (req) => {
       200,
       decompressionResponse,
       'Decompressed successfully'
-    )
+    ),
+    {
+      headers: CORS_HEADERS
+    }
   )
 }
 

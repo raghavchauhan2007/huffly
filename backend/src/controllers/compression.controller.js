@@ -1,4 +1,4 @@
-import { MAX_FILE_SIZE } from "../constants"
+import { CORS_HEADERS, MAX_FILE_SIZE } from "../constants"
 import { compress } from "../services/compression.service"
 import ApiError from "../utils/ApiError"
 import ApiResponse from "../utils/ApiResponse"
@@ -22,7 +22,10 @@ const compressFile = async (req) => {
       200,
       compressionResponse,
       'file successfully compressed'
-    )
+    ),
+    {
+      headers: CORS_HEADERS
+    }
   )
 }
 
