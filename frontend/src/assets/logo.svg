@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="100%" height="100%" aria-label="Symmetrical Huffman Tree Logo" role="img">
+  <!-- 
+    Connections / Branches 
+    Calculated to connect precisely center-to-center.
+    Shifted down slightly to perfectly center the graphic vertically.
+  -->
+  <path d="M 128 56 L 64 128 L 32 200 M 64 128 L 96 200 M 128 56 L 192 128 L 160 200 M 192 128 L 224 200" 
+        fill="none" 
+        stroke="#FFFFFF" 
+        stroke-width="14" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" />
+  
+  <!-- 
+    Internal Nodes (Root + 1st Level)
+    Solid circular nodes representing the summation weights.
+  -->
+  <circle cx="128" cy="56" r="18" fill="#FFFFFF" />
+  <circle cx="64" cy="128" r="18" fill="#FFFFFF" />
+  <circle cx="192" cy="128" r="18" fill="#FFFFFF" />
+
+  <!-- 
+    Leaf Nodes (2nd Level)
+    Solid rounded squares representing the encoded data blocks.
+    Horizontally spaced exactly 64px apart (centers at 32, 96, 160, 224).
+  -->
+  <rect x="14" y="182" width="36" height="36" rx="10" fill="#FFFFFF" />
+  <rect x="78" y="182" width="36" height="36" rx="10" fill="#FFFFFF" />
+  <rect x="142" y="182" width="36" height="36" rx="10" fill="#FFFFFF" />
+  <rect x="206" y="182" width="36" height="36" rx="10" fill="#FFFFFF" />
+</svg>
